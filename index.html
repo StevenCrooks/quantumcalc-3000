@@ -1,58 +1,71 @@
 <!DOCTYPE html><html lang="en"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>QuantumCalc 3000</title>
+<title>QuantumCalc 3000 v4</title>
+<script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}</script>
 <style>
 body{margin:0;background:#060a12;color:#e2e8f0;font-family:system-ui;min-height:100vh}
-header{padding:14px 18px;background:rgba(255,255,255,0.06);border-bottom:1px solid rgba(255,255,255,0.1);display:flex;justify-content:space-between}
+header{padding:14px 18px;background:rgba(255,255,255,0.06);border-bottom:1px solid rgba(255,255,255,0.1);display:flex;justify-content:space-between;align-items:center}
 .logo{font-weight:900;color:#a78bfa;font-size:20px}
 .glass{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:20px}
-#wrap{max-width:1100px;margin:16px auto;padding:0 12px;display:grid;gap:16px}
-@media(min-width:850px){#wrap{grid-template-columns:1fr 1fr}}
+#wrap{max-width:1200px;margin:16px auto;padding:0 12px;display:grid;gap:16px}
+@media(min-width:900px){#wrap{grid-template-columns:1.1fr 0.9fr}}
 .calc{padding:16px}
-.display{background:rgba(0,0,0,0.5);border-radius:14px;padding:14px;min-height:80px}
-#expr{opacity:0.7;font-family:monospace;font-size:13px;min-height:18px;word-break:break-all}
-#result{font-family:monospace;font-size:30px;font-weight:700;text-align:right}
-.keys{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}
-button{padding:14px;border-radius:12px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.07);color:#fff;font-weight:600;font-size:15px;cursor:pointer}
+.display{background:rgba(0,0,0,0.55);border-radius:14px;padding:14px;min-height:96px;position:relative;overflow:hidden}
+#expr{opacity:0.75;font-family:monospace;font-size:13px;min-height:18px;word-break:break-all}
+#result{font-family:monospace;font-size:30px;font-weight:800;text-align:right;transition:color 0.4s}
+#formulaLabel{font-size:11px;opacity:0.6;margin-top:4px;text-align:right;font-family:monospace;color:#a78bfa}
+.keys{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:12px}
+button{padding:13px 6px;border-radius:12px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.07);color:#fff;font-weight:600;font-size:14px;cursor:pointer}
 button:active{transform:scale(0.96)}button.op{background:rgba(124,58,237,0.35)}button.eq{background:linear-gradient(90deg,#7c3aed,#06ffa5);border:none;font-weight:900}
-#canvasWrap{height:440px;position:relative;overflow:hidden}
+button.sci{background:rgba(6,255,165,0.12);border-color:rgba(6,255,165,0.2);font-size:12px}
+#canvasWrap{height:480px;position:relative;overflow:hidden}
 #three{width:100%;height:100%;display:block}
 .controls{position:absolute;bottom:8px;left:8px;right:8px;display:flex;gap:6px;flex-wrap:wrap}
-.small{padding:8px 10px;font-size:11px;background:rgba(0,0,0,0.65)}
-.badge{padding:4px 8px;border-radius:999px;background:rgba(6,255,165,0.2);font-size:10px;color:#6ee7b7}
-#toast{position:absolute;top:10px;left:50%;transform:translateX(-50%);background:#000;padding:6px 12px;border-radius:999px;font-size:11px;opacity:0;transition:0.3s}
+.small{padding:8px 10px;font-size:11px;background:rgba(0,0,0,0.65);border-radius:10px}
+.badge{padding:4px 10px;border-radius:999px;background:rgba(6,255,165,0.2);font-size:10px;color:#6ee7b7}
+#toast{position:absolute;top:10px;left:50%;transform:translateX(-50%);background:#000;padding:8px 14px;border-radius:999px;font-size:11px;opacity:0;transition:0.3s;pointer-events:none;z-index:5}
 #toast.show{opacity:1}
+#colorDot{position:absolute;top:12px;left:12px;width:14px;height:14px;border-radius:50%;background:#7c3aed;box-shadow:0 0 12px currentColor;transition:all 0.5s}
 </style></head><body>
-<header><div class="logo">QuantumCalc 3000</div><span class="badge" id="status">PBR v3 • buttons fixed</span></header>
+<header><div class="logo">QuantumCalc 3000 v4</div><span class="badge" id="status">v4 • sci + transparent + color</span></header>
 <div id="wrap">
 <div class="glass calc">
-<div class="display"><div id="expr">0</div><div id="result">0</div></div>
+<div class="display"><div id="colorDot"></div><div id="expr">0</div><div id="result">0</div><div id="formulaLabel">Ready</div></div>
 <div class="keys">
 <button onclick="C()">AC</button><button onclick="DEL()">DEL</button><button onclick="ADD('%')">%</button><button class="op" onclick="ADD('/')">÷</button>
 <button onclick="ADD('7')">7</button><button onclick="ADD('8')">8</button><button onclick="ADD('9')">9</button><button class="op" onclick="ADD('*')">×</button>
 <button onclick="ADD('4')">4</button><button onclick="ADD('5')">5</button><button onclick="ADD('6')">6</button><button class="op" onclick="ADD('-')">−</button>
 <button onclick="ADD('1')">1</button><button onclick="ADD('2')">2</button><button onclick="ADD('3')">3</button><button class="op" onclick="ADD('+')">+</button>
 <button onclick="ADD('(')">(</button><button onclick="ADD('0')">0</button><button onclick="ADD(')')">)</button><button class="eq" onclick="EQ()">=</button>
-<button onclick="ADD('Math.sin(')">sin</button><button onclick="ADD('Math.cos(')">cos</button><button onclick="ADD('**')">^</button><button class="eq" style="font-size:12px" onclick="PLOT()">Plot 3D</button>
+<button class="sci" onclick="ADD('Math.sqrt(')">√x</button><button class="sci" onclick="ADD('Math.log10(')">log</button><button class="sci" onclick="ADD('Math.log(')">ln</button><button class="eq" style="font-size:11px" onclick="PLOT()">Plot 3D</button>
+<button class="sci" onclick="ADD('Math.sin(')">sin</button><button class="sci" onclick="ADD('Math.cos(')">cos</button><button class="sci" onclick="ADD('Math.tan(')">tan</button><button class="sci" onclick="ADD('Math.PI')">π</button>
+<button class="sci" onclick="ADD('**')">x^y</button><button class="sci" onclick="ADD('Math.E')">e</button><button class="sci" onclick="ADD('Math.pow(')">pow</button><button class="sci" onclick="ADD('Math.abs(')">|x|</button>
 </div>
 <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">
 <button class="small" onclick="QP('Math.sin(x)*Math.cos(y)')">sin·cos</button>
 <button class="small" onclick="QP('x*x - y*y')">x²-y²</button>
-<button class="small" onclick="QP('x*y*0.4')">x·y</button>
-<button class="small" onclick="RND()">Random</button>
+<button class="small" onclick="QP('Math.sin(x*x+y*y)*0.8')">Ripple</button>
+<button class="small" onclick="QP('x*y*0.4')">Saddle</button>
+<button class="small" onclick="QP('Math.sin(x)*2+Math.cos(y)')">Wave</button>
+<button class="small" onclick="RND()">🎲 Random</button>
 </div>
 </div>
 <div class="glass" id="canvasWrap"><canvas id="three"></canvas><div id="toast"></div>
-<div class="controls"><button class="small" onclick="setView('top')">Top</button><button class="small" onclick="setView('iso')">Iso</button><button class="small" onclick="toggleWire()">Wire</button><button class="small" onclick="exportPNG()">PNG</button></div>
+<div class="controls"><button class="small" onclick="setView('top')">Top</button><button class="small" onclick="setView('iso')">Iso</button><button class="small" onclick="toggleWire()">Wire</button><button class="small" onclick="exportPNGTransparent()">PNG Transp</button><button class="small" onclick="exportPNG()">PNG Solid</button></div>
 </div></div>
 <script>
-let expr='';
-const exprEl=document.getElementById('expr'), resultEl=document.getElementById('result');
-function upd(){ exprEl.textContent=expr||'0'; try{ if(expr){ let v=Function('"use strict";return ('+expr+')')(); if(typeof v==='number'&&isFinite(v)) resultEl.textContent=Number(v.toFixed(6)); } else resultEl.textContent='0'; }catch{} }
+let expr=''; let lastResult=0; let currentHue=270;
+const exprEl=document.getElementById('expr'), resultEl=document.getElementById('result'), labelEl=document.getElementById('formulaLabel'), dotEl=document.getElementById('colorDot');
+function hslToHex(h,s,l){ l/=100; const a=s*Math.min(l,1-l)/100; const f=n=>{ const k=(n+h/30)%12; const col=l - a*Math.max(Math.min(k-3,9-k,1),-1); return Math.round(255*col).toString(16).padStart(2,'0'); }; return `#${f(0)}${f(8)}${f(4)}`; }
+function updateColorFromResult(val){
+  let hue = (Math.abs(val)*13 + 270) % 360; if(val===0) hue=270; currentHue = hue;
+  const col = hslToHex(hue, 85, 62); resultEl.style.color = col; dotEl.style.background = col; dotEl.style.boxShadow = `0 0 18px ${col}`; labelEl.style.color = col; return hue;
+}
+function upd(){ exprEl.textContent=expr||'0'; try{ if(expr){ let v=Function('"use strict";return ('+expr+')')(); if(typeof v==='number'&&isFinite(v)){ resultEl.textContent=Number(v.toFixed(6)); lastResult=v; updateColorFromResult(v); } } else { resultEl.textContent='0'; } }catch{} }
 window.ADD=function(t){ expr+=t; upd(); }
-window.C=function(){ expr=''; upd(); }
+window.C=function(){ expr=''; lastResult=0; upd(); labelEl.textContent='Cleared'; }
 window.DEL=function(){ expr=expr.slice(0,-1); upd(); }
-window.EQ=function(){ try{ let r=Function('"use strict";return ('+expr+')')(); expr=String(r); upd(); }catch{ resultEl.textContent='Error'; } }
+window.EQ=function(){ try{ let r=Function('"use strict";return ('+expr+')')(); if(!isFinite(r)) throw ''; expr=String(r); upd(); labelEl.textContent=`= ${r} • hue ${Math.round(currentHue)}°`; resultEl.style.transform='scale(1.15)'; setTimeout(()=>resultEl.style.transform='scale(1)',150); }catch{ resultEl.textContent='Error'; labelEl.textContent='Invalid expression'; } }
 upd();
 </script>
 <script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}</script>
@@ -60,51 +73,50 @@ upd();
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 const toastEl=document.getElementById('toast');
-function toast(m){toastEl.textContent=m;toastEl.classList.add('show');setTimeout(()=>toastEl.classList.remove('show'),2000)}
+function toast(m){toastEl.textContent=m;toastEl.classList.add('show');setTimeout(()=>toastEl.classList.remove('show'),2600)}
 const canvas=document.getElementById('three');
-const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
-renderer.setPixelRatio(Math.min(devicePixelRatio,2));
-renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.2;
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true,preserveDrawingBuffer:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2)); renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.2; renderer.setClearColor(0x060a12,1);
 const scene=new THREE.Scene();
 const camera=new THREE.PerspectiveCamera(42,1,0.1,100); camera.position.set(5.5,4.8,5.5);
 const controls=new OrbitControls(camera,renderer.domElement); controls.enableDamping=true;
 scene.add(new THREE.DirectionalLight(0xffffff,1.2).position.set(5,10,5));
 scene.add(new THREE.HemisphereLight(0x8b5cf6,0x060a12,0.6));
-scene.add(new THREE.AmbientLight(0xffffff,0.4));
-scene.add(new THREE.GridHelper(14,14,0x444466,0x222233).position.set(0,-1.2,0));
-let mesh, mat, wire=false;
+scene.add(new THREE.AmbientLight(0xffffff,0.45));
+const grid=new THREE.GridHelper(14,14,0x444466,0x222233); grid.position.y=-1.2; scene.add(grid);
+let mesh, mat, wire=false; let baseHue=270;
+function hueToRGB(h){ const s=0.85,l=0.62; const c=(1-Math.abs(2*l-1))*s; const x=c*(1-Math.abs((h/60)%2-1)); const m=l-c/2; let r=0,g=0,b=0; if(h<60){r=c;g=x}else if(h<120){r=x;g=c}else if(h<180){g=c;b=x}else if(h<240){g=x;b=c}else if(h<300){r=x;b=c}else{r=c;b=x} return [r+m,g+m,b+m]; }
 function makeSurface(fnStr,label){
  if(mesh) scene.remove(mesh);
- const geom=new THREE.PlaneGeometry(11,11,80,80);
- const pos=geom.attributes.position; const colors=[];
- for(let i=0;i<pos.count;i++){
-  let x=pos.getX(i), y=pos.getY(i), z=0;
-  try{ z=Function('x','y','return '+fnStr)(x,y); if(!isFinite(z)) z=0; }catch{z=0;}
-  z=Math.max(-2.5,Math.min(2.5,z)); pos.setZ(i,z);
-  let t=(z+2.5)/5; colors.push(0.5+t*0.5,0.25+t*0.45,0.9);
- }
- geom.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
- geom.computeVertexNormals();
- mat=new THREE.MeshStandardMaterial({vertexColors:true,metalness:0.7,roughness:0.25,side:THREE.DoubleSide,wireframe:wire});
+ baseHue = window.currentHue!==undefined ? window.currentHue : ((Math.abs(window.lastResult||0)*13+270)%360);
+ const geom=new THREE.PlaneGeometry(11,11,90,90);
+ const pos=geom.attributes.position; const colors=[]; let minZ=999,maxZ=-999; const zs=[];
+ for(let i=0;i<pos.count;i++){ let x=pos.getX(i), y=pos.getY(i), z=0; try{ z=Function('x','y','return '+fnStr)(x,y); if(!isFinite(z)) z=0; }catch{z=0;} z=Math.max(-2.5,Math.min(2.5,z)); zs.push(z); pos.setZ(i,z); minZ=Math.min(minZ,z); maxZ=Math.max(maxZ,z); }
+ for(let i=0;i<zs.length;i++){ let t=(zs[i]-minZ)/Math.max(0.001,maxZ-minZ); let h=(baseHue + t*60 -30 +360)%360; let [r,g,b]=hueToRGB(h); r=r*0.6 + t*0.4; g=g*0.5 + t*0.3; b=b*0.7 + t*0.3; colors.push(r,g,b); }
+ geom.setAttribute('color',new THREE.Float32BufferAttribute(colors,3)); geom.computeVertexNormals();
+ mat=new THREE.MeshStandardMaterial({vertexColors:true,metalness:0.72,roughness:0.24,side:THREE.DoubleSide,wireframe:wire,emissive:new THREE.Color(hueToRGB(baseHue)[0]*0.08,hueToRGB(baseHue)[1]*0.08,hueToRGB(baseHue)[2]*0.15),emissiveIntensity:0.25});
  mesh=new THREE.Mesh(geom,mat); mesh.rotation.x=-Math.PI/2; scene.add(mesh);
- toast(label?`Plotted: ${label}`:'Plotted');
- document.getElementById('status').textContent='Live • '+ (label||'ready');
+ toast(label?`${label} • hue ${Math.round(baseHue)}°`:'Plotted');
+ document.getElementById('status').textContent=`Live • ${label||'ready'} • hue ${Math.round(baseHue)}°`;
+ document.getElementById('formulaLabel').textContent = label ? `f(x,y)= ${label} → hue ${Math.round(baseHue)}°` : `f(x,y)= ${fnStr.slice(0,32)}`;
 }
-function smartF(){
- let f=expr.trim(); if(!f) return {fn:'Math.sin(x*1.5)*Math.cos(y*1.2)',label:'default'};
- if(/[xy]/.test(f)) return {fn:f,label:f};
- try{ let v=Function('"use strict";return ('+f+')')(); if(isFinite(v)){ let a=Math.min(2,Math.max(0.3,Math.abs(v)/3)); return {fn:`Math.sin(x*1.5)*Math.cos(y*1.2)*${a}`,label:`Amp ${v}`}; } }catch{}
- return {fn:'Math.sin(x*1.2)*Math.cos(y*1.2)',label:'fallback'};
+window.PLOT=function(){
+  let raw=document.getElementById('expr').textContent; if(window.expr!==undefined && window.expr!=='') raw=window.expr;
+  let result={fn:'',label:''};
+  if(!raw || raw==='0') result={fn:'Math.sin(x*1.5)*Math.cos(y*1.2)',label:'sin·cos default'};
+  else if(/[xy]/.test(raw)) result={fn:raw,label:raw};
+  else { try{ let v=Function('"use strict";return ('+raw+')')(); if(isFinite(v)){ let a=Math.min(2,Math.max(0.35,Math.abs(v)/3)); result={fn:`Math.sin(x*1.5)*Math.cos(y*1.2)*${a}`,label:`${raw}=${v}`}; window.lastResult=v; window.currentHue=(Math.abs(v)*13+270)%360; } }catch{ result={fn:'Math.sin(x*1.2)*Math.cos(y*1.2)',label:'fallback'}; } }
+  makeSurface(result.fn,result.label);
 }
-window.PLOT=function(){ let {fn,label}=smartF(); makeSurface(fn,label); }
-window.QP=function(f){ expr=f; upd(); makeSurface(f,f); }
-window.RND=function(){ const fs=['Math.sin(x)*Math.cos(y)','x*x - y*y','Math.sin(x*x+y*y)*0.8','x*y*0.5','Math.cos(x)*Math.cos(y)']; const f=fs[Math.floor(Math.random()*fs.length)]; makeSurface(f,f); }
-window.toggleWire=function(){ wire=!wire; if(mat) mat.wireframe=wire; toast(wire?'Wire':'Solid'); }
+window.QP=function(f){ document.getElementById('expr').textContent=f; window.expr=f; makeSurface(f,f); }
+window.RND=function(){ const fs=['Math.sin(x)*Math.cos(y)','x*x - y*y','Math.sin(x*x+y*y)*0.8','x*y*0.5','Math.cos(x)*Math.cos(y)*1.2']; const f=fs[Math.floor(Math.random()*fs.length)]; makeSurface(f,'Random: '+f); }
+window.toggleWire=function(){ wire=!wire; if(mat) mat.wireframe=wire; toast(wire?'Wireframe':'Solid'); }
 window.setView=function(v){ if(v==='top') camera.position.set(0,8,0.01); else camera.position.set(5.5,4.8,5.5); controls.update(); }
-window.exportPNG=function(){ renderer.render(scene,camera); const a=document.createElement('a'); a.download='qc3d.png'; a.href=canvas.toDataURL(); a.click(); }
+window.exportPNG=function(){ renderer.setClearColor(0x060a12,1); renderer.render(scene,camera); const a=document.createElement('a'); a.download=`qc-${Date.now()}.png`; a.href=canvas.toDataURL('image/png'); a.click(); toast('PNG solid saved'); }
+window.exportPNGTransparent=function(){ const old=renderer.getClearColor(new THREE.Color()); const oldA=renderer.getClearAlpha(); renderer.setClearColor(0x000000,0); renderer.render(scene,camera); const data=canvas.toDataURL('image/png'); renderer.setClearColor(old,oldA); renderer.render(scene,camera); const a=document.createElement('a'); a.download=`qc-transparent-${Date.now()}.png`; a.href=data; a.click(); toast('PNG transparent saved ✓'); }
 function resize(){ const r=canvas.parentElement.getBoundingClientRect(); renderer.setSize(r.width,r.height,false); camera.aspect=r.width/r.height; camera.updateProjectionMatrix(); }
 window.addEventListener('resize',resize); resize();
 (function loop(){ requestAnimationFrame(loop); controls.update(); renderer.render(scene,camera); })();
-makeSurface('Math.sin(x*1.5)*Math.cos(y*1.2)','Initial');
+makeSurface('Math.sin(x*1.5)*Math.cos(y*1.2)','Initial sin·cos');
 </script>
 </body></html>
