@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="en"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>QuantumCalc 3000 v4</title>
+<title>QuantumCalc 3000 v4.1</title>
 <script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}</script>
 <style>
 body{margin:0;background:#060a12;color:#e2e8f0;font-family:system-ui;min-height:100vh}
@@ -12,10 +12,10 @@ header{padding:14px 18px;background:rgba(255,255,255,0.06);border-bottom:1px sol
 .calc{padding:16px}
 .display{background:rgba(0,0,0,0.55);border-radius:14px;padding:14px;min-height:96px;position:relative;overflow:hidden}
 #expr{opacity:0.75;font-family:monospace;font-size:13px;min-height:18px;word-break:break-all}
-#result{font-family:monospace;font-size:30px;font-weight:800;text-align:right;transition:color 0.4s}
-#formulaLabel{font-size:11px;opacity:0.6;margin-top:4px;text-align:right;font-family:monospace;color:#a78bfa}
+#result{font-family:monospace;font-size:32px;font-weight:900;text-align:right;transition:color 0.4s,transform 0.15s}
+#formulaLabel{font-size:11px;opacity:0.7;margin-top:4px;text-align:right;font-family:monospace;color:#a78bfa}
 .keys{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:12px}
-button{padding:13px 6px;border-radius:12px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.07);color:#fff;font-weight:600;font-size:14px;cursor:pointer}
+button{padding:13px 6px;border-radius:12px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.07);color:#fff;font-weight:600;font-size:14px;cursor:pointer;user-select:none}
 button:active{transform:scale(0.96)}button.op{background:rgba(124,58,237,0.35)}button.eq{background:linear-gradient(90deg,#7c3aed,#06ffa5);border:none;font-weight:900}
 button.sci{background:rgba(6,255,165,0.12);border-color:rgba(6,255,165,0.2);font-size:12px}
 #canvasWrap{height:480px;position:relative;overflow:hidden}
@@ -25,12 +25,12 @@ button.sci{background:rgba(6,255,165,0.12);border-color:rgba(6,255,165,0.2);font
 .badge{padding:4px 10px;border-radius:999px;background:rgba(6,255,165,0.2);font-size:10px;color:#6ee7b7}
 #toast{position:absolute;top:10px;left:50%;transform:translateX(-50%);background:#000;padding:8px 14px;border-radius:999px;font-size:11px;opacity:0;transition:0.3s;pointer-events:none;z-index:5}
 #toast.show{opacity:1}
-#colorDot{position:absolute;top:12px;left:12px;width:14px;height:14px;border-radius:50%;background:#7c3aed;box-shadow:0 0 12px currentColor;transition:all 0.5s}
+#colorDot{position:absolute;top:12px;left:12px;width:14px;height:14px;border-radius:50%;background:#7c3aed;box-shadow:0 0 18px currentColor;transition:all 0.5s}
 </style></head><body>
-<header><div class="logo">QuantumCalc 3000 v4</div><span class="badge" id="status">v4 • sci + transparent + color</span></header>
+<header><div class="logo">QuantumCalc 3000 v4.1</div><span class="badge" id="status">v4.1 • auto-plot • distinct colors</span></header>
 <div id="wrap">
 <div class="glass calc">
-<div class="display"><div id="colorDot"></div><div id="expr">0</div><div id="result">0</div><div id="formulaLabel">Ready</div></div>
+<div class="display"><div id="colorDot"></div><div id="expr">0</div><div id="result">0</div><div id="formulaLabel">Ready — type 6, 100, 200 to see color shift</div></div>
 <div class="keys">
 <button onclick="C()">AC</button><button onclick="DEL()">DEL</button><button onclick="ADD('%')">%</button><button class="op" onclick="ADD('/')">÷</button>
 <button onclick="ADD('7')">7</button><button onclick="ADD('8')">8</button><button onclick="ADD('9')">9</button><button class="op" onclick="ADD('*')">×</button>
@@ -54,19 +54,17 @@ button.sci{background:rgba(6,255,165,0.12);border-color:rgba(6,255,165,0.2);font
 <div class="controls"><button class="small" onclick="setView('top')">Top</button><button class="small" onclick="setView('iso')">Iso</button><button class="small" onclick="toggleWire()">Wire</button><button class="small" onclick="exportPNGTransparent()">PNG Transp</button><button class="small" onclick="exportPNG()">PNG Solid</button></div>
 </div></div>
 <script>
-let expr=''; let lastResult=0; let currentHue=270;
+let expr=''; window.expr=''; window.lastResult=0; window.currentHue=270;
 const exprEl=document.getElementById('expr'), resultEl=document.getElementById('result'), labelEl=document.getElementById('formulaLabel'), dotEl=document.getElementById('colorDot');
 function hslToHex(h,s,l){ l/=100; const a=s*Math.min(l,1-l)/100; const f=n=>{ const k=(n+h/30)%12; const col=l - a*Math.max(Math.min(k-3,9-k,1),-1); return Math.round(255*col).toString(16).padStart(2,'0'); }; return `#${f(0)}${f(8)}${f(4)}`; }
-function updateColorFromResult(val){
-  let hue = (Math.abs(val)*13 + 270) % 360; if(val===0) hue=270; currentHue = hue;
-  const col = hslToHex(hue, 85, 62); resultEl.style.color = col; dotEl.style.background = col; dotEl.style.boxShadow = `0 0 18px ${col}`; labelEl.style.color = col; return hue;
-}
-function upd(){ exprEl.textContent=expr||'0'; try{ if(expr){ let v=Function('"use strict";return ('+expr+')')(); if(typeof v==='number'&&isFinite(v)){ resultEl.textContent=Number(v.toFixed(6)); lastResult=v; updateColorFromResult(v); } } else { resultEl.textContent='0'; } }catch{} }
-window.ADD=function(t){ expr+=t; upd(); }
-window.C=function(){ expr=''; lastResult=0; upd(); labelEl.textContent='Cleared'; }
-window.DEL=function(){ expr=expr.slice(0,-1); upd(); }
-window.EQ=function(){ try{ let r=Function('"use strict";return ('+expr+')')(); if(!isFinite(r)) throw ''; expr=String(r); upd(); labelEl.textContent=`= ${r} • hue ${Math.round(currentHue)}°`; resultEl.style.transform='scale(1.15)'; setTimeout(()=>resultEl.style.transform='scale(1)',150); }catch{ resultEl.textContent='Error'; labelEl.textContent='Invalid expression'; } }
-upd();
+function getDistinctHue(val){ let absV=Math.abs(val); return absV % 360; }
+function updateColorFromResult(val){ let hue=getDistinctHue(val); window.currentHue=hue; window.lastResult=val; const col=hslToHex(hue,90,62); resultEl.style.color=col; dotEl.style.background=col; dotEl.style.boxShadow=`0 0 20px ${col}`; labelEl.style.color=col; return hue; }
+function upd(){ exprEl.textContent=expr||'0'; window.expr=expr; try{ if(expr){ let v=Function('"use strict";return ('+expr+')')(); if(typeof v==='number'&&isFinite(v)){ resultEl.textContent=Number(v.toFixed(6)); } } else { resultEl.textContent='0'; } }catch{} }
+window.ADD=function(t){ expr+=t; window.expr=expr; upd(); }
+window.C=function(){ expr=''; window.expr=''; window.lastResult=0; upd(); labelEl.textContent='Cleared'; updateColorFromResult(0); if(window.PLOT) window.PLOT(); }
+window.DEL=function(){ expr=expr.slice(0,-1); window.expr=expr; upd(); }
+window.EQ=function(){ try{ let r=Function('"use strict";return ('+expr+')')(); if(!isFinite(r)) throw 'inf'; expr=String(r); window.expr=expr; let hue=updateColorFromResult(r); window.lastResult=r; upd(); labelEl.textContent=`= ${r} • hue ${Math.round(hue)}° • ${r<20?'RED':r<150?'GREEN':'BLUE'}`; resultEl.style.transform='scale(1.18)'; setTimeout(()=>resultEl.style.transform='scale(1)',160); if(window.PLOT) setTimeout(()=>window.PLOT(),60); }catch{ resultEl.textContent='Error'; labelEl.textContent='Invalid expression'; } }
+upd(); updateColorFromResult(0);
 </script>
 <script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}</script>
 <script type="module">
@@ -76,44 +74,45 @@ const toastEl=document.getElementById('toast');
 function toast(m){toastEl.textContent=m;toastEl.classList.add('show');setTimeout(()=>toastEl.classList.remove('show'),2600)}
 const canvas=document.getElementById('three');
 const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true,preserveDrawingBuffer:true});
-renderer.setPixelRatio(Math.min(devicePixelRatio,2)); renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.2; renderer.setClearColor(0x060a12,1);
+renderer.setPixelRatio(Math.min(devicePixelRatio,2)); renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.25; renderer.setClearColor(0x060a12,1);
 const scene=new THREE.Scene();
 const camera=new THREE.PerspectiveCamera(42,1,0.1,100); camera.position.set(5.5,4.8,5.5);
 const controls=new OrbitControls(camera,renderer.domElement); controls.enableDamping=true;
-scene.add(new THREE.DirectionalLight(0xffffff,1.2).position.set(5,10,5));
+scene.add(new THREE.DirectionalLight(0xffffff,1.3).position.set(5,10,5));
 scene.add(new THREE.HemisphereLight(0x8b5cf6,0x060a12,0.6));
 scene.add(new THREE.AmbientLight(0xffffff,0.45));
 const grid=new THREE.GridHelper(14,14,0x444466,0x222233); grid.position.y=-1.2; scene.add(grid);
-let mesh, mat, wire=false; let baseHue=270;
-function hueToRGB(h){ const s=0.85,l=0.62; const c=(1-Math.abs(2*l-1))*s; const x=c*(1-Math.abs((h/60)%2-1)); const m=l-c/2; let r=0,g=0,b=0; if(h<60){r=c;g=x}else if(h<120){r=x;g=c}else if(h<180){g=c;b=x}else if(h<240){g=x;b=c}else if(h<300){r=x;b=c}else{r=c;b=x} return [r+m,g+m,b+m]; }
+let mesh, mat, wire=false;
+function hueToRGB(h){ const s=0.90,l=0.60; const c=(1-Math.abs(2*l-1))*s; const x=c*(1-Math.abs((h/60)%2-1)); const m=l-c/2; let r=0,g=0,b=0; if(h<60){r=c;g=x}else if(h<120){r=x;g=c}else if(h<180){g=c;b=x}else if(h<240){g=x;b=c}else if(h<300){r=x;b=c}else{r=c;b=x} return [r+m,g+m,b+m]; }
 function makeSurface(fnStr,label){
  if(mesh) scene.remove(mesh);
- baseHue = window.currentHue!==undefined ? window.currentHue : ((Math.abs(window.lastResult||0)*13+270)%360);
+ let baseHue=window.currentHue!==undefined?window.currentHue:270;
  const geom=new THREE.PlaneGeometry(11,11,90,90);
  const pos=geom.attributes.position; const colors=[]; let minZ=999,maxZ=-999; const zs=[];
  for(let i=0;i<pos.count;i++){ let x=pos.getX(i), y=pos.getY(i), z=0; try{ z=Function('x','y','return '+fnStr)(x,y); if(!isFinite(z)) z=0; }catch{z=0;} z=Math.max(-2.5,Math.min(2.5,z)); zs.push(z); pos.setZ(i,z); minZ=Math.min(minZ,z); maxZ=Math.max(maxZ,z); }
- for(let i=0;i<zs.length;i++){ let t=(zs[i]-minZ)/Math.max(0.001,maxZ-minZ); let h=(baseHue + t*60 -30 +360)%360; let [r,g,b]=hueToRGB(h); r=r*0.6 + t*0.4; g=g*0.5 + t*0.3; b=b*0.7 + t*0.3; colors.push(r,g,b); }
+ for(let i=0;i<zs.length;i++){ let t=(zs[i]-minZ)/Math.max(0.001,maxZ-minZ); let h=(baseHue + t*70 -35 +360)%360; let [r,g,b]=hueToRGB(h); r=r*0.7+t*0.3; g=g*0.6+t*0.2; b=b*0.75+t*0.25; colors.push(r,g,b); }
  geom.setAttribute('color',new THREE.Float32BufferAttribute(colors,3)); geom.computeVertexNormals();
- mat=new THREE.MeshStandardMaterial({vertexColors:true,metalness:0.72,roughness:0.24,side:THREE.DoubleSide,wireframe:wire,emissive:new THREE.Color(hueToRGB(baseHue)[0]*0.08,hueToRGB(baseHue)[1]*0.08,hueToRGB(baseHue)[2]*0.15),emissiveIntensity:0.25});
+ let [er,eg,eb]=hueToRGB(baseHue);
+ mat=new THREE.MeshStandardMaterial({vertexColors:true,metalness:0.75,roughness:0.22,side:THREE.DoubleSide,wireframe:wire,emissive:new THREE.Color(er*0.12,eg*0.12,eb*0.18),emissiveIntensity:0.35});
  mesh=new THREE.Mesh(geom,mat); mesh.rotation.x=-Math.PI/2; scene.add(mesh);
  toast(label?`${label} • hue ${Math.round(baseHue)}°`:'Plotted');
  document.getElementById('status').textContent=`Live • ${label||'ready'} • hue ${Math.round(baseHue)}°`;
- document.getElementById('formulaLabel').textContent = label ? `f(x,y)= ${label} → hue ${Math.round(baseHue)}°` : `f(x,y)= ${fnStr.slice(0,32)}`;
+ if(document.getElementById('formulaLabel')){ let existing=document.getElementById('formulaLabel').textContent; if(!existing.includes('hue')||label.includes('=')){ document.getElementById('formulaLabel').textContent=`f(x,y)= ${label} → hue ${Math.round(baseHue)}°`; } }
 }
 window.PLOT=function(){
-  let raw=document.getElementById('expr').textContent; if(window.expr!==undefined && window.expr!=='') raw=window.expr;
-  let result={fn:'',label:''};
-  if(!raw || raw==='0') result={fn:'Math.sin(x*1.5)*Math.cos(y*1.2)',label:'sin·cos default'};
+  let raw=window.expr||document.getElementById('expr').textContent||'0';
+  raw=raw.trim(); let result={fn:'',label:''};
+  if(!raw||raw==='0') result={fn:'Math.sin(x*1.5)*Math.cos(y*1.2)',label:'sin·cos default'};
   else if(/[xy]/.test(raw)) result={fn:raw,label:raw};
-  else { try{ let v=Function('"use strict";return ('+raw+')')(); if(isFinite(v)){ let a=Math.min(2,Math.max(0.35,Math.abs(v)/3)); result={fn:`Math.sin(x*1.5)*Math.cos(y*1.2)*${a}`,label:`${raw}=${v}`}; window.lastResult=v; window.currentHue=(Math.abs(v)*13+270)%360; } }catch{ result={fn:'Math.sin(x*1.2)*Math.cos(y*1.2)',label:'fallback'}; } }
+  else { try{ let v=Function('"use strict";return ('+raw+')')(); if(isFinite(v)){ let a=Math.min(2.2,Math.max(0.35,Math.abs(v)/30+0.4)); window.lastResult=v; window.currentHue=Math.abs(v)%360; result={fn:`Math.sin(x*1.5)*Math.cos(y*1.2)*${a}+Math.sin(x*y*0.5)*0.25`,label:`${raw}=${v}`}; } }catch{ result={fn:'Math.sin(x*1.2)*Math.cos(y*1.2)',label:'fallback'}; } }
   makeSurface(result.fn,result.label);
 }
-window.QP=function(f){ document.getElementById('expr').textContent=f; window.expr=f; makeSurface(f,f); }
-window.RND=function(){ const fs=['Math.sin(x)*Math.cos(y)','x*x - y*y','Math.sin(x*x+y*y)*0.8','x*y*0.5','Math.cos(x)*Math.cos(y)*1.2']; const f=fs[Math.floor(Math.random()*fs.length)]; makeSurface(f,'Random: '+f); }
+window.QP=function(f){ window.expr=f; document.getElementById('expr').textContent=f; makeSurface(f,f); }
+window.RND=function(){ const fs=['Math.sin(x)*Math.cos(y)','x*x - y*y','Math.sin(x*x+y*y)*0.8','x*y*0.5','Math.cos(x)*Math.cos(y)*1.2','Math.sin(x+y)*1.1']; const f=fs[Math.floor(Math.random()*fs.length)]; makeSurface(f,'Random: '+f); }
 window.toggleWire=function(){ wire=!wire; if(mat) mat.wireframe=wire; toast(wire?'Wireframe':'Solid'); }
 window.setView=function(v){ if(v==='top') camera.position.set(0,8,0.01); else camera.position.set(5.5,4.8,5.5); controls.update(); }
-window.exportPNG=function(){ renderer.setClearColor(0x060a12,1); renderer.render(scene,camera); const a=document.createElement('a'); a.download=`qc-${Date.now()}.png`; a.href=canvas.toDataURL('image/png'); a.click(); toast('PNG solid saved'); }
-window.exportPNGTransparent=function(){ const old=renderer.getClearColor(new THREE.Color()); const oldA=renderer.getClearAlpha(); renderer.setClearColor(0x000000,0); renderer.render(scene,camera); const data=canvas.toDataURL('image/png'); renderer.setClearColor(old,oldA); renderer.render(scene,camera); const a=document.createElement('a'); a.download=`qc-transparent-${Date.now()}.png`; a.href=data; a.click(); toast('PNG transparent saved ✓'); }
+window.exportPNG=function(){ renderer.setClearColor(0x060a12,1); renderer.render(scene,camera); const a=document.createElement('a'); a.download=`qc-solid-${Date.now()}.png`; a.href=canvas.toDataURL('image/png'); a.click(); toast('PNG solid saved'); }
+window.exportPNGTransparent=function(){ const old=renderer.getClearColor(new THREE.Color()); const oldA=renderer.getClearAlpha(); renderer.setClearColor(0x000000,0); renderer.render(scene,camera); const data=canvas.toDataURL('image/png'); renderer.setClearColor(old,oldA); renderer.render(scene,camera); const a=document.createElement('a'); a.download=`qc-transparent-${Date.now()}.png`; a.href=data; a.click(); toast('PNG transparent ✓'); }
 function resize(){ const r=canvas.parentElement.getBoundingClientRect(); renderer.setSize(r.width,r.height,false); camera.aspect=r.width/r.height; camera.updateProjectionMatrix(); }
 window.addEventListener('resize',resize); resize();
 (function loop(){ requestAnimationFrame(loop); controls.update(); renderer.render(scene,camera); })();
