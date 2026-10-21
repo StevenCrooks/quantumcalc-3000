@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="en"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>QuantumCalc 3000 v4.2 Pro</title>
+<title>QuantumCalc 3000 v4.3 Pro - Patent Core</title>
 <script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}</script>
 <style>
 body{margin:0;background:#060a12;color:#e2e8f0;font-family:system-ui;min-height:100vh}
@@ -33,25 +33,24 @@ button.pro{background:linear-gradient(90deg,#f59e0b,#fbbf24);color:#000;font-wei
 .modalBox{background:#1a162f;border:1px solid #7c3aed;border-radius:20px;padding:24px;max-width:380px;width:100%;text-align:center}
 </style></head><body>
 <header>
-<div class="logo">QuantumCalc 3000 v4.2</div>
+<div class="logo">QuantumCalc 3000 v4.3</div>
 <div style="display:flex;gap:8px;align-items:center">
-<span class="badge" id="status">v4.2 • Pro Ready</span>
+<span class="badge" id="status">v4.3 • Shader Core • Pro Ready</span>
 <button class="small pro-badge" id="proBtn" onclick="openPay()">⭐ Go Pro €5 Lifetime</button>
 </div>
 </header>
 <div id="payModal" onclick="if(event.target.id==='payModal')closePay()">
 <div class="modalBox">
 <h3 style="margin:0 0 8px">Unlock QuantumCalc Pro</h3>
-<p style="opacity:0.7;font-size:13px;margin:0 0 16px">High-res 4K PNG, 110x detail, 5 extra formulas. One-time €5, lifetime access.</p>
+<p style="opacity:0.7;font-size:13px;margin:0 0 16px">High-res 4K, 110x detail, Shader Compiler, 5 formulas. €5 lifetime.</p>
 <a id="stripeLink" href="https://buy.stripe.com/4gM00c2jN0bJdp4a9eaEE09" target="_blank" style="display:block;background:linear-gradient(90deg,#635bff,#7c3aed);color:#fff;padding:14px;border-radius:12px;text-decoration:none;font-weight:800;margin-bottom:10px">Pay with Stripe → €5 One-Time</a>
 <button class="small" onclick="unlockPro()" style="width:100%;margin-top:6px">I already paid (dev unlock)</button>
 <button class="small" onclick="closePay()" style="width:100%;background:transparent;border:1px solid rgba(255,255,255,0.2)">Close</button>
-<p style="font-size:10px;opacity:0.5;margin-top:10px">After payment, redirect to ?pro=1 auto-unlocks</p>
 </div>
 </div>
 <div id="wrap">
 <div class="glass calc">
-<div class="display"><div id="colorDot"></div><div id="expr">0</div><div id="result">0</div><div id="formulaLabel">Ready — 6=RED 100=GREEN 200=BLUE</div></div>
+<div class="display"><div id="colorDot"></div><div id="expr">0</div><div id="result">0</div><div id="formulaLabel">Ready — Shader Patent Core Active</div></div>
 <div class="keys">
 <button onclick="C()">AC</button><button onclick="DEL()">DEL</button><button onclick="ADD('%')">%</button><button class="op" onclick="ADD('/')">÷</button>
 <button onclick="ADD('7')">7</button><button onclick="ADD('8')">8</button><button onclick="ADD('9')">9</button><button class="op" onclick="ADD('*')">×</button>
@@ -79,12 +78,12 @@ let expr=''; window.expr=''; window.lastResult=0; window.currentHue=270;
 const exprEl=document.getElementById('expr'), resultEl=document.getElementById('result'), labelEl=document.getElementById('formulaLabel'), dotEl=document.getElementById('colorDot');
 function hslToHex(h,s,l){ l/=100; const a=s*Math.min(l,1-l)/100; const f=n=>{ const k=(n+h/30)%12; const col=l - a*Math.max(Math.min(k-3,9-k,1),-1); return Math.round(255*col).toString(16).padStart(2,'0'); }; return `#${f(0)}${f(8)}${f(4)}`; }
 function getDistinctHue(v){return Math.abs(v)%360;}
-function updateColor(v){ let h=getDistinctHue(v); window.currentHue=h; window.lastResult=v; const col=hslToHex(h,90,62); resultEl.style.color=col; dotEl.style.background=col; dotEl.style.boxShadow=`0 0 20px ${col}`; labelEl.style.color=col; return h;}
+function updateColor(v){ let h=getDistinctHue(v); window.currentHue=h; window.lastResult=v; const col=hslToHex(h,90,62); resultEl.style.color=col; dotEl.style.background=col; dotEl.style.boxShadow=`0 0 20px ${col}`; labelEl.style.color=col; if(window.setBaseHue) window.setBaseHue(h); return h;}
 function upd(){ exprEl.textContent=expr||'0'; window.expr=expr; try{ if(expr){ let v=Function('"use strict";return ('+expr+')')(); if(typeof v==='number'&&isFinite(v)){ resultEl.textContent=Number(v.toFixed(6)); } } else resultEl.textContent='0'; }catch{} }
 window.ADD=function(t){ expr+=t; window.expr=expr; upd(); }
 window.C=function(){ expr=''; window.expr=''; upd(); labelEl.textContent='Cleared'; updateColor(0); if(window.PLOT) window.PLOT(); }
 window.DEL=function(){ expr=expr.slice(0,-1); window.expr=expr; upd(); }
-window.EQ=function(){ try{ let r=Function('"use strict";return ('+expr+')')(); if(!isFinite(r)) throw ''; expr=String(r); window.expr=expr; let hue=updateColor(r); window.lastResult=r; upd(); labelEl.textContent=`= ${r} • hue ${Math.round(hue)}° • ${r<20?'RED':r<150?'GREEN':'BLUE'}`; resultEl.style.transform='scale(1.18)'; setTimeout(()=>resultEl.style.transform='scale(1)',160); if(window.PLOT) setTimeout(()=>window.PLOT(),60); }catch{ resultEl.textContent='Error'; labelEl.textContent='Invalid'; } }
+window.EQ=function(){ try{ let r=Function('"use strict";return ('+expr+')')(); if(!isFinite(r)) throw ''; expr=String(r); window.expr=expr; let hue=updateColor(r); window.lastResult=r; upd(); labelEl.textContent=`= ${r} • hue ${Math.round(hue)}° • SHADER`; resultEl.style.transform='scale(1.18)'; setTimeout(()=>resultEl.style.transform='scale(1)',160); if(window.PLOT) setTimeout(()=>window.PLOT(),60); }catch{ resultEl.textContent='Error'; labelEl.textContent='Invalid'; } }
 upd(); updateColor(0);
 let isPro = localStorage.getItem('qc_pro')==='1' || new URLSearchParams(location.search).get('pro')==='1';
 if(isPro){ localStorage.setItem('qc_pro','1'); }
@@ -108,30 +107,84 @@ const scene=new THREE.Scene(); const camera=new THREE.PerspectiveCamera(42,1,0.1
 const controls=new OrbitControls(camera,renderer.domElement); controls.enableDamping=true;
 scene.add(new THREE.DirectionalLight(0xffffff,1.3).position.set(5,10,5)); scene.add(new THREE.HemisphereLight(0x8b5cf6,0x060a12,0.6)); scene.add(new THREE.AmbientLight(0xffffff,0.45));
 const grid=new THREE.GridHelper(14,14,0x444466,0x222233); grid.position.y=-1.2; scene.add(grid);
-let mesh,mat,wire=false;
-function hueToRGB(h){ const s=0.90,l=0.60; const c=(1-Math.abs(2*l-1))*s; const x=c*(1-Math.abs((h/60)%2-1)); const m=l-c/2; let r=0,g=0,b=0; if(h<60){r=c;g=x}else if(h<120){r=x;g=c}else if(h<180){g=c;b=x}else if(h<240){g=x;b=c}else if(h<300){r=x;b=c}else{r=c;b=x} return [r+m,g+m,b+m]; }
-function makeSurface(fnStr,label){
- if(mesh) scene.remove(mesh); let baseHue=window.currentHue||270;
- const detail = localStorage.getItem('qc_pro')==='1'? 110:90;
- const geom=new THREE.PlaneGeometry(11,11,detail,detail);
- const pos=geom.attributes.position; const colors=[]; let minZ=999,maxZ=-999; const zs=[];
- for(let i=0;i<pos.count;i++){ let x=pos.getX(i), y=pos.getY(i), z=0; try{ z=Function('x','y','return '+fnStr)(x,y); if(!isFinite(z)) z=0; }catch{z=0;} z=Math.max(-2.5,Math.min(2.5,z)); zs.push(z); pos.setZ(i,z); minZ=Math.min(minZ,z); maxZ=Math.max(maxZ,z); }
- for(let i=0;i<zs.length;i++){ let t=(zs[i]-minZ)/Math.max(0.001,maxZ-minZ); let h=(baseHue + t*70 -35 +360)%360; let [r,g,b]=hueToRGB(h); r=r*0.7+t*0.3; g=g*0.6+t*0.2; b=b*0.75+t*0.25; colors.push(r,g,b); }
- geom.setAttribute('color',new THREE.Float32BufferAttribute(colors,3)); geom.computeVertexNormals();
- let [er,eg,eb]=hueToRGB(baseHue);
- mat=new THREE.MeshStandardMaterial({vertexColors:true,metalness:0.75,roughness:0.22,side:THREE.DoubleSide,wireframe:wire,emissive:new THREE.Color(er*0.12,eg*0.12,eb*0.18),emissiveIntensity:0.35});
- mesh=new THREE.Mesh(geom,mat); mesh.rotation.x=-Math.PI/2; scene.add(mesh);
- toast(label?`${label} • hue ${Math.round(baseHue)}°`:'Plotted'); document.getElementById('status').textContent=`Live • ${label||'ready'} • hue ${Math.round(baseHue)}° • ${localStorage.getItem('qc_pro')?'PRO':''}`;
- document.getElementById('formulaLabel').textContent=`f(x,y)= ${label} → hue ${Math.round(baseHue)}°`;
+let mesh,mat,geom; let wire=false; let baseHueUniform={value:270};
+window.setBaseHue=(h)=>{ baseHueUniform.value=h; if(mat && mat.uniforms) mat.uniforms.u_baseHue.value=h; }
+
+// PATENT FEATURE #1: Math.js -> GLSL compiler
+function compileToGLSL(jsFn){
+ let s=jsFn;
+ s=s.replace(/Math\.sin/g,'sin').replace(/Math\.cos/g,'cos').replace(/Math\.tan/g,'tan').replace(/Math\.sqrt/g,'sqrt').replace(/Math\.abs/g,'abs').replace(/Math\.pow\(/g,'pow(').replace(/Math\.log\(/g,'log(').replace(/Math\.exp\(/g,'exp(');
+ s=s.replace(/\*\*/g,'^'); // handle later
+ s=s.replace(/(\w+)\s*\^\s*(\w+)/g,'pow($1,$2)');
+ // Clamp to avoid NaN
+ return `float z = ${s}; z = clamp(z, -2.5, 2.5);`;
 }
-window.PLOT=function(){ let raw=window.expr||'0'; raw=raw.trim(); let r={fn:'',label:''}; if(!raw||raw==='0') r={fn:'Math.sin(x*1.5)*Math.cos(y*1.2)',label:'sin·cos default'}; else if(/[xy]/.test(raw)) r={fn:raw,label:raw}; else{ try{ let v=Function('"use strict";return ('+raw+')')(); if(isFinite(v)){ let a=Math.min(2.2,Math.max(0.35,Math.abs(v)/30+0.4)); window.lastResult=v; window.currentHue=Math.abs(v)%360; r={fn:`Math.sin(x*1.5)*Math.cos(y*1.2)*${a}+Math.sin(x*y*0.5)*0.25`,label:`${raw}=${v}`}; } }catch{ r={fn:'Math.sin(x*1.2)*Math.cos(y*1.2)',label:'fallback'}; } } makeSurface(r.fn,r.label); }
-window.QP=function(f){ window.expr=f; document.getElementById('expr').textContent=f; makeSurface(f,f); }
-window.RND=function(){ const fs=['Math.sin(x)*Math.cos(y)','x*x - y*y','Math.sin(x*x+y*y)*0.8','x*y*0.5']; const f=fs[Math.floor(Math.random()*fs.length)]; makeSurface(f,'Random: '+f); }
-window.toggleWire=function(){ wire=!wire; if(mat) mat.wireframe=wire; toast(wire?'Wireframe':'Solid'); }
+
+function hueToRGB_GL(h){
+ return `vec3 hue2rgb(float h){
+  float c = 0.9; float x = c * (1.0 - abs(mod(h/60.0,2.0)-1.0));
+  vec3 rgb = vec3(0.0);
+  if(h<60.0) rgb=vec3(c,x,0.0); else if(h<120.0) rgb=vec3(x,c,0.0); else if(h<180.0) rgb=vec3(0.0,c,x); else if(h<240.0) rgb=vec3(0.0,x,c); else if(h<300.0) rgb=vec3(x,0.0,c); else rgb=vec3(c,0.0,x);
+  return rgb + 0.1;
+ }`;
+}
+
+function makeSurface(fnStr,label){
+ const detail = localStorage.getItem('qc_pro')==='1'? 110:90;
+ const glslZ = compileToGLSL(fnStr);
+ const isNewGeom = !geom || geom.parameters.widthSegments !== detail;
+ if(isNewGeom){
+  if(mesh) scene.remove(mesh);
+  geom=new THREE.PlaneGeometry(11,11,detail,detail);
+ }
+ const vertexShader=`
+  varying vec3 vPos; varying float vZ;
+  uniform float u_baseHue;
+  ${hueToRGB_GL()}
+  // PATENT: compiled expression injected
+  void main(){
+   vPos = position;
+   ${glslZ}
+   vec3 pos = position; pos.z = z; vZ = z;
+   gl_Position = projectionMatrix * modelViewMatrix * vec4(pos,1.0);
+  }
+ `;
+ const fragmentShader=`
+  varying vec3 vPos; varying float vZ;
+  uniform float u_baseHue; uniform bool u_wire;
+  ${hueToRGB_GL()}
+  void main(){
+   float t = (vZ + 2.5)/5.0;
+   float h = mod(u_baseHue + t*70.0 -35.0 +360.0, 360.0);
+   vec3 col = hue2rgb(h);
+   // Patent pipeline: hue drives emissive + height tint
+   col = col * 0.7 + t * 0.35;
+   float emiss = 0.18 + t*0.12;
+   gl_FragColor = vec4(col + emiss*0.15, 1.0);
+  }
+ `;
+ if(isNewGeom || !mat){
+  mat=new THREE.ShaderMaterial({
+   vertexShader, fragmentShader,
+   uniforms:{ u_baseHue: baseHueUniform, u_wire:{value:wire} },
+   side:THREE.DoubleSide, wireframe:wire
+  });
+  mesh=new THREE.Mesh(geom,mat); mesh.rotation.x=-Math.PI/2; scene.add(mesh);
+ } else {
+  // PATENT FEATURE #2: Differential update - only swap shaders, reuse buffer
+  mat.vertexShader=vertexShader; mat.fragmentShader=fragmentShader; mat.needsUpdate=true;
+  mat.uniforms.u_baseHue.value=baseHueUniform.value;
+ }
+ toast(`${label} • shader • hue ${Math.round(baseHueUniform.value)}°`); document.getElementById('status').textContent=`Live Shader • ${label} • hue ${Math.round(baseHueUniform.value)}° • ${localStorage.getItem('qc_pro')?'PRO':''}`;
+ document.getElementById('formulaLabel').textContent=`f(x,y)= ${label} → GLSL: ${glslZ.slice(0,60)}...`;
+}
+window.PLOT=function(){ let raw=window.expr||'0'; raw=raw.trim(); let r={fn:'',label:''}; if(!raw||raw==='0') r={fn:'sin(x*1.5)*cos(y*1.2)',label:'sin·cos default'}; else if(/[xy]/.test(raw)) r={fn:raw.replace(/Math\./g,''),label:raw}; else{ try{ let v=Function('"use strict";return ('+raw+')')(); if(isFinite(v)){ let a=Math.min(2.2,Math.max(0.35,Math.abs(v)/30+0.4)); window.lastResult=v; window.currentHue=Math.abs(v)%360; baseHueUniform.value=window.currentHue; r={fn:`sin(x*1.5)*cos(y*1.2)*${a}+sin(x*y*0.5)*0.25`,label:`${raw}=${v}`}; } }catch{ r={fn:'sin(x*1.2)*cos(y*1.2)',label:'fallback'}; } } makeSurface(r.fn,r.label); }
+window.QP=function(f){ window.expr=f; document.getElementById('expr').textContent=f; makeSurface(f.replace(/Math\./g,''),f); }
+window.RND=function(){ const fs=['sin(x)*cos(y)','x*x - y*y','sin(x*x+y*y)*0.8','x*y*0.5']; const f=fs[Math.floor(Math.random()*fs.length)]; makeSurface(f,'Random: '+f); }
+window.toggleWire=function(){ wire=!wire; if(mat){ mat.wireframe=wire; } toast(wire?'Wireframe':'Solid'); }
 window.setView=function(v){ if(v==='top') camera.position.set(0,8,0.01); else camera.position.set(5.5,4.8,5.5); controls.update(); }
-window.exportPNG=function(){ renderer.setClearColor(0x060a12,1); renderer.render(scene,camera); const a=document.createElement('a'); a.download=`qc-solid-${Date.now()}.png`; a.href=canvas.toDataURL('image/png'); a.click(); toast('PNG solid'); }
-window.exportPNGTransparent=function(isHD){ const old=renderer.getClearColor(new THREE.Color()); const oldA=renderer.getClearAlpha(); if(isHD && localStorage.getItem('qc_pro')){ renderer.setSize(2400,2400,false); camera.aspect=1; camera.updateProjectionMatrix(); } renderer.setClearColor(0x000000,0); renderer.render(scene,camera); const data=canvas.toDataURL('image/png'); renderer.setClearColor(old,oldA); if(isHD){ const r=canvas.parentElement.getBoundingClientRect(); renderer.setSize(r.width,r.height,false); camera.aspect=r.width/r.height; camera.updateProjectionMatrix(); renderer.render(scene,camera); } const a=document.createElement('a'); a.download=`qc-${isHD?'4k':'transp'}-${Date.now()}.png`; a.href=data; a.click(); toast(isHD?'4K PNG Pro ✓':'PNG transparent ✓'); }
+window.exportPNGTransparent=function(isHD){ const old=renderer.getClearColor(new THREE.Color()); const oldA=renderer.getClearAlpha(); if(isHD && localStorage.getItem('qc_pro')){ renderer.setSize(2400,2400,false); camera.aspect=1; camera.updateProjectionMatrix(); } renderer.setClearColor(0x000000,0); renderer.render(scene,camera); const data=canvas.toDataURL('image/png'); renderer.setClearColor(old,oldA); if(isHD){ const r=canvas.parentElement.getBoundingClientRect(); renderer.setSize(r.width,r.height,false); camera.aspect=r.width/r.height; camera.updateProjectionMatrix(); renderer.render(scene,camera); } const a=document.createElement('a'); a.download=`qc-${isHD?'4k-shader':'transp-shader'}-${Date.now()}.png`; a.href=data; a.click(); toast(isHD?'4K PNG Pro Shader ✓':'PNG transparent Shader ✓'); }
 function resize(){ const r=canvas.parentElement.getBoundingClientRect(); renderer.setSize(r.width,r.height,false); camera.aspect=r.width/r.height; camera.updateProjectionMatrix(); }
-window.addEventListener('resize',resize); resize(); (function loop(){ requestAnimationFrame(loop); controls.update(); renderer.render(scene,camera); })(); makeSurface('Math.sin(x*1.5)*Math.cos(y*1.2)','Initial sin·cos');
+window.addEventListener('resize',resize); resize(); (function loop(){ requestAnimationFrame(loop); controls.update(); renderer.render(scene,camera); })(); makeSurface('sin(x*1.5)*cos(y*1.2)','Initial sin·cos shader');
 </script>
 </body></html>
